@@ -1,0 +1,22 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    // Admin-managed sounds
+    match /sounds/{allPaths=**} {
+      allow read: if true;
+      allow write, update, delete: if isAdmin();
+    }
+
+    // User-specific uploads (optional)
+    match /user_uploads/{userId}/{allPaths=**} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+  }
+}
